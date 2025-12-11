@@ -39,6 +39,8 @@ uploads/
 *.xlsx
 *.xls
 *.json
+!vercel.json
+!package.json
 
 # IDE
 .vscode/
