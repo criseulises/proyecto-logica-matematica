@@ -1,7 +1,15 @@
 """
 Vercel Serverless Function wrapper para SmartPlannerX
 """
-from app import app
+import sys
+from os.path import join, dirname, abspath
 
-# Exportar la app de Flask para Vercel
-# Vercel buscará automáticamente el objeto "app" en este módulo
+# Agregar el directorio raíz al path de Python
+root_dir = abspath(join(dirname(__file__), '..'))
+sys.path.insert(0, root_dir)
+
+# Importar la aplicación Flask
+from app import app as application
+
+# Exportar para Vercel
+app = application

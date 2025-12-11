@@ -20,10 +20,18 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# En Vercel, usar /tmp para uploads (único directorio escribible)
+if os.environ.get('VERCEL'):
+    app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
+else:
+    app.config['UPLOAD_FOLDER'] = 'uploads'
 
 # Crear carpeta de uploads si no existe
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except Exception:
+    pass  # En entornos read-only, ignorar error
 
 # Almacenamiento en memoria
 # Materias institucionales (compartidas)
