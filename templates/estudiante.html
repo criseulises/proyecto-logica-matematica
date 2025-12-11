@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!--
+SmartPlannerX - Panel de Estudiante
+
+Equipo 3:
+- Cristian E. Sánchez R. (25-0688)
+- Hansel Augusto Pérez (25-0461)
+- Lia De Oleo (25-0673)
+- Juan José Cruz Romero (25-0888)
+- Samir Gonzalez (25-0808)
+- Alejandro Bruno (25-0947)
+- Daniel Osvaldo Lopez (25-0655)
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estudiante - SmartPlannerX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="background-gradient"></div>
+
+    <main class="app-container">
+      <header class="app-header">
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
+        <h1><i class="fas fa-user-graduate"></i> Panel de Estudiante</h1>
+        <p class="subtitle">Selecciona tus materias y genera tu horario</p>
+      </header>
+
+      <div class="grid-layout">
+        <!-- Left Column: Subject Selection -->
+        <div class="left-column">
+          <section class="card selection-section glass">
+            <h2><i class="fas fa-book"></i> Catálogo de Materias</h2>
+            <p class="info-text">
+              Selecciona las secciones que deseas cursar. Puedes elegir una o más secciones por materia.
+            </p>
+            <div id="materias-catalog"></div>
+          </section>
+
+          <!-- Selected Subjects -->
+          <section class="card list-section glass">
+            <h3><i class="fas fa-check-circle"></i> Mis Selecciones</h3>
+            <div class="stats-box">
+              <p>Materias: <span id="selected-count">0</span></p>
+            </div>
+            <ul id="selected-items"></ul>
+          </section>
+        </div>
+
+        <!-- Right Column: Results -->
+        <div class="right-column">
+          <section class="card results-section glass">
+            <div class="results-header">
+              <h2><i class="fas fa-calendar-alt"></i> Horarios Generados</h2>
+              <button id="generate-btn" class="btn-success">
+                <i class="fas fa-magic"></i> GENERAR HORARIOS
+              </button>
+            </div>
+
+            <div class="stats-box">
+              <p>Combinaciones teóricas: <span id="stats-teoricas">0</span></p>
+              <p>Horarios válidos: <span id="stats-validas">0</span></p>
+            </div>
+
+            <div id="sol-nav" class="nav-controls" style="display: none;">
+              <button class="nav-btn" id="prev-sol">
+                <i class="fas fa-chevron-left"></i> Anterior
+              </button>
+              <span id="sol-counter">Opción 1</span>
+              <button class="nav-btn" id="next-sol">
+                Siguiente <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <div class="horarios-container" id="horarios-container">
+              <p class="placeholder-text">
+                Selecciona tus materias y genera horarios
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let currentSolutionIndex = 0;
+      let solutionsCache = [];
+      let selectedSections = new Set();
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Student Panel Loaded");
+        loadCatalog();
+
+        document.getElementById("generate-btn").addEventListener("click", generateSchedule);
+        document.getElementById("prev-sol").addEventListener("click", () => {
+          if (currentSolutionIndex > 0) {
+            currentSolutionIndex--;
+            renderCalendar(solutionsCache[currentSolutionIndex]);
+          }
+        });
+        document.getElementById("next-sol").addEventListener("click", () => {
+          if (currentSolutionIndex < solutionsCache.length - 1) {
+            currentSolutionIndex++;
+            renderCalendar(solutionsCache[currentSolutionIndex]);
+          }
+        });
+      });
+
+      async function loadCatalog() {
+        const response = await fetch("/api/list");
+        const materias = await response.json();
+        const catalog = document.getElementById("materias-catalog");
+        catalog.innerHTML = "";
+
+        if (materias.length === 0) {
+          catalog.innerHTML = '<p class="placeholder-text">No hay materias disponibles. La institución debe agregarlas primero.</p>';
+          return;
+        }
+
+        materias.forEach((m) => {
+          const card = document.createElement("div");
+          card.className = "materia-card";
+
+          const header = document.createElement("div");
+          header.className = "materia-card-header";
+          header.innerHTML = `<h3>${m.nombre}</h3><span class="badge">${m.secciones.length} secciones</span>`;
+          card.appendChild(header);
+
+          const sectionsList = document.createElement("div");
+          sectionsList.className = "sections-grid";
+
+          m.secciones.forEach((s) => {
+            const sectionItem = document.createElement("label");
+            sectionItem.className = "section-checkbox";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = s.uuid;
+            checkbox.dataset.materia = m.nombre;
+            checkbox.onchange = () => toggleSelection(m.nombre, s);
+
+            const info = document.createElement("div");
+            info.className = "section-info";
+            info.innerHTML = `
+              <strong>Sección ${s.id}</strong>
+              <span>${s.dias.join(", ")}</span>
+              <span class="time-text">${formatTime(s.inicio)} - ${formatTime(s.fin)}</span>
+            `;
+
+            sectionItem.appendChild(checkbox);
+            sectionItem.appendChild(info);
+            sectionsList.appendChild(sectionItem);
+          });
+
+          card.appendChild(sectionsList);
+          catalog.appendChild(card);
+        });
+      }
+
+      function toggleSelection(materia, seccion) {
+        const key = `${materia}|${seccion.uuid}`;
+        if (selectedSections.has(key)) {
+          selectedSections.delete(key);
+        } else {
+          selectedSections.add(key);
+        }
+        updateSelectedList();
+      }
+
+      function updateSelectedList() {
+        const list = document.getElementById("selected-items");
+        list.innerHTML = "";
+
+        const grouped = {};
+        selectedSections.forEach((key) => {
+          const [materia] = key.split("|");
+          if (!grouped[materia]) grouped[materia] = 0;
+          grouped[materia]++;
+        });
+
+        Object.entries(grouped).forEach(([materia, count]) => {
+          const li = document.createElement("li");
+          li.className = "selected-item";
+          li.innerHTML = `<i class="fas fa-book"></i> ${materia} <span class="badge-small">${count} sección(es)</span>`;
+          list.appendChild(li);
+        });
+
+        document.getElementById("selected-count").textContent = Object.keys(grouped).length;
+      }
+
+      async function generateSchedule() {
+        if (selectedSections.size === 0) {
+          Swal.fire("Atención", "Selecciona al menos una materia", "warning");
+          return;
+        }
+
+        const response = await fetch("/api/generate_student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ selected: Array.from(selectedSections) }),
+        });
+
+        const data = await response.json();
+        document.getElementById("stats-teoricas").textContent = data.teoricas;
+        document.getElementById("stats-validas").textContent = data.validas;
+
+        solutionsCache = data.soluciones;
+        currentSolutionIndex = 0;
+
+        if (data.validas === 0) {
+          Swal.fire("Sin Resultados", "No se encontraron horarios sin conflictos", "warning");
+          document.getElementById("horarios-container").innerHTML =
+            '<p class="placeholder-text">No hay horarios válidos. Intenta con otras secciones.</p>';
+          document.getElementById("sol-nav").style.display = "none";
+        } else {
+          document.getElementById("sol-nav").style.display = "flex";
+          renderCalendar(solutionsCache[0]);
+        }
+      }
+
+      function renderCalendar(solucion) {
+        const container = document.getElementById("horarios-container");
+        const counter = document.getElementById("sol-counter");
+        counter.textContent = `Opción ${currentSolutionIndex + 1} de ${solutionsCache.length}`;
+
+        container.innerHTML = "";
+
+        const table = document.createElement("table");
+        table.className = "schedule-table";
+
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th>Materia</th>
+            <th>Sección</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        solucion.forEach((clase) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="fw-bold">${clase.materia}</td>
+            <td>${clase.seccion}</td>
+          `;
+
+          const diasSemana = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+          diasSemana.forEach((diaNombre) => {
+            const td = document.createElement("td");
+            if (clase.dias.includes(diaNombre)) {
+              td.className = "active-day";
+              td.innerHTML = `<span class="time-badge">${clase.hora}</span>`;
+            }
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+      }
+
+      function formatTime(h) {
+        const hours = Math.floor(h);
+        const minutes = Math.round((h - hours) * 60);
+        const ampm = hours >= 12 ? "pm" : "am";
+        let hours12 = hours % 12;
+        hours12 = hours12 ? hours12 : 12;
+        const minStr = minutes === 0 ? "" : `:${minutes.toString().padStart(2, "0")}`;
+        return `${hours12}${minStr}${ampm}`;
+      }
+    </script>
+  </body>
+</html>

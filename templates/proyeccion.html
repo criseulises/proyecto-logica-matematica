@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<!--
+SmartPlannerX - Panel de Proyección
+
+Equipo 3:
+- Cristian E. Sánchez R. (25-0688)
+- Hansel Augusto Pérez (25-0461)
+- Lia De Oleo (25-0673)
+- Juan José Cruz Romero (25-0888)
+- Samir Gonzalez (25-0808)
+- Alejandro Bruno (25-0947)
+- Daniel Osvaldo Lopez (25-0655)
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proyección - SmartPlannerX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="background-gradient"></div>
+
+    <main class="app-container">
+      <header class="app-header">
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
+        <h1><i class="fas fa-chart-line"></i> Proyección de Materias</h1>
+        <p class="subtitle">Planifica tus materias futuras y visualiza posibles horarios</p>
+      </header>
+
+      <div class="grid-layout">
+        <!-- Left Column: Inputs -->
+        <div class="left-column">
+          <!-- Chat Helper Section -->
+          <section class="card chat-section glass">
+            <h2><i class="fas fa-comment-dots"></i> Asistente Rápido</h2>
+            <div class="chat-box" id="chat-box">
+              <div class="chat-msg bot">
+                Agrega materias de tu proyección con el formato:<br />
+                <b>Materia Sección Días Inicio-Fin</b><br />
+                Ej: <b>Calculo 2 101 Lunes,Miercoles 8-10</b>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input
+                type="text"
+                id="chat-input"
+                placeholder="Ej: Base de Datos 201 Martes 14-16"
+              />
+              <button id="chat-send"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </section>
+
+          <!-- File Upload Section -->
+          <section class="card upload-section glass">
+            <h2><i class="fas fa-cloud-upload-alt"></i> Importar Archivo</h2>
+            <p class="info-text">Sube un archivo Excel (.xlsx) o JSON con tus materias proyectadas</p>
+            <div class="upload-area">
+              <input type="file" id="file-input" accept=".json,.xlsx,.xls" style="display: none;" />
+              <div class="upload-dropzone" id="upload-dropzone">
+                <i class="fas fa-file-upload fa-3x"></i>
+                <p>Arrastra un archivo aquí o haz clic para seleccionar</p>
+                <p class="file-types">Excel (.xlsx, .xls) o JSON (.json)</p>
+              </div>
+              <button id="upload-btn" class="btn-primary" style="display: none;">
+                <i class="fas fa-upload"></i> Subir Archivo
+              </button>
+            </div>
+          </section>
+
+          <!-- Manual Input Section -->
+          <section class="card input-section glass">
+            <h2><i class="fas fa-plus-circle"></i> Entrada Manual</h2>
+            <form id="add-form">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="materia"
+                  placeholder="Nombre de la Materia"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="seccion"
+                  placeholder="Sección (ej: 101)"
+                  required
+                />
+              </div>
+              <div class="days-checkboxes">
+                <label><input type="checkbox" value="Lunes" /> L</label>
+                <label><input type="checkbox" value="Martes" /> M</label>
+                <label><input type="checkbox" value="Miercoles" /> X</label>
+                <label><input type="checkbox" value="Jueves" /> J</label>
+                <label><input type="checkbox" value="Viernes" /> V</label>
+                <label><input type="checkbox" value="Sabado" /> S</label>
+              </div>
+              <div class="row">
+                <input
+                  type="number"
+                  id="inicio"
+                  placeholder="Hora Inicio (ej: 8)"
+                  min="0"
+                  max="23"
+                  step="0.5"
+                  required
+                />
+                <input
+                  type="number"
+                  id="fin"
+                  placeholder="Hora Fin (ej: 10)"
+                  min="0"
+                  max="23"
+                  step="0.5"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-plus"></i> Agregar a Proyección
+              </button>
+            </form>
+          </section>
+
+          <!-- Projection List -->
+          <section class="card list-section glass">
+            <div class="section-header">
+              <h3><i class="fas fa-clipboard-list"></i> Mi Proyección</h3>
+              <button id="clear-all-btn" class="btn-danger-small">
+                <i class="fas fa-trash"></i> Limpiar Todo
+              </button>
+            </div>
+            <ul id="lista-items"></ul>
+          </section>
+        </div>
+
+        <!-- Right Column: Results -->
+        <div class="right-column">
+          <section class="card results-section glass">
+            <div class="results-header">
+              <h2><i class="fas fa-calendar-check"></i> Simulación de Horarios</h2>
+              <button id="generate-btn" class="btn-success">
+                <i class="fas fa-magic"></i> SIMULAR HORARIOS
+              </button>
+            </div>
+
+            <div class="info-card">
+              <i class="fas fa-info-circle"></i>
+              <p>Esta es tu proyección personal. Puedes simular diferentes combinaciones de horarios basadas en las materias que planeas cursar.</p>
+            </div>
+
+            <div class="stats-box">
+              <p>Combinaciones posibles: <span id="stats-teoricas">0</span></p>
+              <p>Sin conflictos: <span id="stats-validas">0</span></p>
+            </div>
+
+            <div id="sol-nav" class="nav-controls" style="display: none;">
+              <button class="nav-btn" id="prev-sol">
+                <i class="fas fa-chevron-left"></i> Anterior
+              </button>
+              <span id="sol-counter">Opción 1</span>
+              <button class="nav-btn" id="next-sol">
+                Siguiente <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <div class="horarios-container" id="horarios-container">
+              <p class="placeholder-text">
+                Agrega materias a tu proyección y simula horarios
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let currentSolutionIndex = 0;
+      let solutionsCache = [];
+      let selectedFile = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Projection Panel Loaded");
+        loadProyeccion();
+
+        // File Upload Logic
+        const fileInput = document.getElementById("file-input");
+        const dropzone = document.getElementById("upload-dropzone");
+        const uploadBtn = document.getElementById("upload-btn");
+
+        dropzone.addEventListener("click", () => fileInput.click());
+
+        dropzone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+
+        dropzone.addEventListener("dragleave", () => {
+          dropzone.classList.remove("dragover");
+        });
+
+        dropzone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            selectedFile = files[0];
+            updateDropzone();
+          }
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            updateDropzone();
+          }
+        });
+
+        uploadBtn.addEventListener("click", uploadFile);
+
+        function updateDropzone() {
+          if (selectedFile) {
+            dropzone.innerHTML = `
+              <i class="fas fa-file-check fa-3x" style="color: var(--success-color);"></i>
+              <p><strong>${selectedFile.name}</strong></p>
+              <p class="file-types">${(selectedFile.size / 1024).toFixed(2)} KB</p>
+            `;
+            uploadBtn.style.display = "block";
+          }
+        }
+
+        async function uploadFile() {
+          if (!selectedFile) {
+            Swal.fire("Error", "No hay archivo seleccionado", "error");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          try {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            const response = await fetch("/api/proyeccion/upload", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              Swal.fire({
+                icon: "success",
+                title: "¡Archivo Procesado!",
+                html: `
+                  <p>${result.message}</p>
+                  <p><strong>Total en archivo:</strong> ${result.total}</p>
+                  <p><strong>Agregadas:</strong> ${result.added}</p>
+                  ${result.errors > 0 ? `<p style="color: orange;"><strong>Errores:</strong> ${result.errors}</p>` : ''}
+                `,
+              });
+              loadProyeccion();
+              resetUpload();
+            } else {
+              Swal.fire("Error", result.error || "No se pudo procesar el archivo", "error");
+            }
+          } catch (e) {
+            Swal.fire("Error", "Error de conexión al subir archivo", "error");
+          } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Subir Archivo';
+          }
+        }
+
+        function resetUpload() {
+          selectedFile = null;
+          fileInput.value = "";
+          dropzone.innerHTML = `
+            <i class="fas fa-file-upload fa-3x"></i>
+            <p>Arrastra un archivo aquí o haz clic para seleccionar</p>
+            <p class="file-types">Excel (.xlsx, .xls) o JSON (.json)</p>
+          `;
+          uploadBtn.style.display = "none";
+        }
+
+        // Chat Logic
+        const chatInput = document.getElementById("chat-input");
+        const chatSend = document.getElementById("chat-send");
+        const chatBox = document.getElementById("chat-box");
+
+        function addMessage(text, isUser) {
+          const div = document.createElement("div");
+          div.className = `chat-msg ${isUser ? "user" : "bot"}`;
+          div.innerHTML = text;
+          chatBox.appendChild(div);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendChat() {
+          const text = chatInput.value.trim();
+          if (!text) return;
+
+          addMessage(text, true);
+          chatInput.value = "";
+
+          try {
+            const response = await fetch("/api/proyeccion/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mensaje: text }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+              addMessage(data.message, false);
+              loadProyeccion();
+            } else {
+              addMessage(data.message || "No entendí el formato.", false);
+            }
+          } catch (e) {
+            addMessage("Error de conexión.", false);
+          }
+        }
+
+        chatSend.addEventListener("click", sendChat);
+        chatInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendChat();
+        });
+
+        // Manual Add Logic
+        document.getElementById("add-form").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const materia = document.getElementById("materia").value;
+          const seccion = document.getElementById("seccion").value;
+          const inicio = parseFloat(document.getElementById("inicio").value);
+          const fin = parseFloat(document.getElementById("fin").value);
+          const dias = Array.from(
+            document.querySelectorAll('input[type="checkbox"]:checked')
+          ).map((cb) => cb.value);
+
+          if (dias.length === 0) {
+            Swal.fire("Error", "Selecciona al menos un día", "error");
+            return;
+          }
+
+          if (inicio >= fin) {
+            Swal.fire("Error", "La hora de inicio debe ser menor que la hora de fin", "error");
+            return;
+          }
+
+          const data = { materia, seccion, dias, inicio, fin };
+          try {
+            const response = await fetch("/api/proyeccion/add", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire("Éxito", result.message, "success");
+              loadProyeccion();
+              document.getElementById("add-form").reset();
+            } else {
+              Swal.fire("Error", result.error || "No se pudo agregar", "error");
+            }
+          } catch (e) {
+            Swal.fire("Error", "Error de conexión", "error");
+          }
+        });
+
+        // Clear All
+        document.getElementById("clear-all-btn").addEventListener("click", async () => {
+          const result = await Swal.fire({
+            title: "¿Limpiar toda la proyección?",
+            text: "Se eliminarán todas las materias agregadas",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#ef4444",
+            cancelButtonColor: "#3b82f6",
+            confirmButtonText: "Sí, limpiar",
+          });
+
+          if (result.isConfirmed) {
+            await fetch("/api/proyeccion/clear", { method: "POST" });
+            await loadProyeccion();
+            Swal.fire("Limpiado", "Tu proyección ha sido limpiada", "success");
+          }
+        });
+
+        // Generate
+        document.getElementById("generate-btn").addEventListener("click", generateSchedule);
+        document.getElementById("prev-sol").addEventListener("click", () => {
+          if (currentSolutionIndex > 0) {
+            currentSolutionIndex--;
+            renderCalendar(solutionsCache[currentSolutionIndex]);
+          }
+        });
+        document.getElementById("next-sol").addEventListener("click", () => {
+          if (currentSolutionIndex < solutionsCache.length - 1) {
+            currentSolutionIndex++;
+            renderCalendar(solutionsCache[currentSolutionIndex]);
+          }
+        });
+      });
+
+      async function loadProyeccion() {
+        const response = await fetch("/api/proyeccion/list");
+        const materias = await response.json();
+        const list = document.getElementById("lista-items");
+        list.innerHTML = "";
+
+        materias.forEach((m) => {
+          const li = document.createElement("li");
+          li.className = "materia-item-container";
+
+          const header = document.createElement("div");
+          header.className = "materia-header";
+          header.innerHTML = `
+            <span><strong>${m.nombre}</strong> <small>(${m.secciones.length} secciones)</small></span>
+            <button class="btn-delete" onclick="deleteMateria('${m.nombre}')"><i class="fas fa-trash"></i></button>
+          `;
+          li.appendChild(header);
+
+          const ulSec = document.createElement("ul");
+          ulSec.className = "secciones-list";
+
+          m.secciones.forEach((s) => {
+            const liSec = document.createElement("li");
+            liSec.className = "seccion-item";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = s.enabled;
+            checkbox.onchange = () => toggleSection(m.nombre, s.uuid, checkbox.checked);
+
+            const label = document.createElement("label");
+            label.textContent = ` Sec ${s.id} - ${s.dias.join(", ")} (${formatTime(s.inicio)} - ${formatTime(s.fin)})`;
+            label.prepend(checkbox);
+
+            const btnDelSec = document.createElement("button");
+            btnDelSec.className = "btn-delete-sec";
+            btnDelSec.innerHTML = '<i class="fas fa-times"></i>';
+            btnDelSec.onclick = () => deleteSection(m.nombre, s.uuid);
+
+            liSec.appendChild(label);
+            liSec.appendChild(btnDelSec);
+            ulSec.appendChild(liSec);
+          });
+
+          li.appendChild(ulSec);
+          list.appendChild(li);
+        });
+      }
+
+      async function toggleSection(materia, uuid, enabled) {
+        await fetch("/api/proyeccion/toggle_section", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ materia, uuid, enabled }),
+        });
+      }
+
+      async function deleteMateria(nombre) {
+        const result = await Swal.fire({
+          title: "¿Eliminar materia?",
+          text: `Se eliminará ${nombre} y todas sus secciones`,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          cancelButtonColor: "#3b82f6",
+          confirmButtonText: "Sí, eliminar",
+        });
+
+        if (result.isConfirmed) {
+          await fetch("/api/proyeccion/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ materia: nombre }),
+          });
+          await loadProyeccion();
+        }
+      }
+
+      async function deleteSection(materia, uuid) {
+        const result = await Swal.fire({
+          title: "¿Eliminar sección?",
+          text: "Esta acción no se puede deshacer",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          cancelButtonColor: "#3b82f6",
+          confirmButtonText: "Sí, eliminar",
+        });
+
+        if (result.isConfirmed) {
+          await fetch("/api/proyeccion/delete_section", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ materia, uuid }),
+          });
+          await loadProyeccion();
+        }
+      }
+
+      async function generateSchedule() {
+        const response = await fetch("/api/proyeccion/generate");
+        const data = await response.json();
+        document.getElementById("stats-teoricas").textContent = data.teoricas;
+        document.getElementById("stats-validas").textContent = data.validas;
+
+        solutionsCache = data.soluciones;
+        currentSolutionIndex = 0;
+
+        if (data.validas === 0) {
+          Swal.fire("Sin Resultados", "No se encontraron horarios sin conflictos", "warning");
+          document.getElementById("horarios-container").innerHTML =
+            '<p class="placeholder-text">No hay horarios válidos.</p>';
+          document.getElementById("sol-nav").style.display = "none";
+        } else {
+          document.getElementById("sol-nav").style.display = "flex";
+          renderCalendar(solutionsCache[0]);
+        }
+      }
+
+      function renderCalendar(solucion) {
+        const container = document.getElementById("horarios-container");
+        const counter = document.getElementById("sol-counter");
+        counter.textContent = `Opción ${currentSolutionIndex + 1} de ${solutionsCache.length}`;
+
+        container.innerHTML = "";
+
+        const table = document.createElement("table");
+        table.className = "schedule-table";
+
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th>Materia</th>
+            <th>Sección</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        solucion.forEach((clase) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="fw-bold">${clase.materia}</td>
+            <td>${clase.seccion}</td>
+          `;
+
+          const diasSemana = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+          diasSemana.forEach((diaNombre) => {
+            const td = document.createElement("td");
+            if (clase.dias.includes(diaNombre)) {
+              td.className = "active-day";
+              td.innerHTML = `<span class="time-badge">${clase.hora}</span>`;
+            }
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+      }
+
+      function formatTime(h) {
+        const hours = Math.floor(h);
+        const minutes = Math.round((h - hours) * 60);
+        const ampm = hours >= 12 ? "pm" : "am";
+        let hours12 = hours % 12;
+        hours12 = hours12 ? hours12 : 12;
+        const minStr = minutes === 0 ? "" : `:${minutes.toString().padStart(2, "0")}`;
+        return `${hours12}${minStr}${ampm}`;
+      }
+    </script>
+  </body>
+</html>

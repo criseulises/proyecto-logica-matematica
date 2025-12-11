@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--
+SmartPlannerX - Sistema Inteligente de Generación de Horarios Académicos
+
+Equipo 3:
+- Cristian E. Sánchez R. (25-0688)
+- Hansel Augusto Pérez (25-0461)
+- Lia De Oleo (25-0673)
+- Juan José Cruz Romero (25-0888)
+- Samir Gonzalez (25-0808)
+- Alejandro Bruno (25-0947)
+- Daniel Osvaldo Lopez (25-0655)
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartPlannerX - Inicio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --font-family: "Outfit", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.3) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 40%),
+                        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            z-index: -1;
+            animation: pulse 10s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #60a5fa, #34d399, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .role-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .role-card:nth-child(1) { animation-delay: 0.1s; }
+        .role-card:nth-child(2) { animation-delay: 0.2s; }
+        .role-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .role-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-color);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .role-card:hover::before {
+            opacity: 1;
+        }
+
+        .role-card.institution { --accent-color: var(--accent-blue); }
+        .role-card.student { --accent-color: var(--accent-green); }
+        .role-card.projection { --accent-color: var(--accent-purple); }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .role-card:hover .role-icon {
+            transform: rotate(360deg) scale(1.1);
+        }
+
+        .role-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .role-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-card .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .role-card .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .features {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            text-align: left;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .features li i {
+            color: var(--accent-color);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>SmartPlannerX</h1>
+            <p>Sistema Inteligente de Generación de Horarios Académicos</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Institución Card -->
+            <div class="role-card institution" onclick="window.location.href='/institucion'">
+                <div class="role-icon">
+                    <i class="fas fa-university"></i>
+                </div>
+                <h2>Institución</h2>
+                <p>Administra y gestiona todas las materias y secciones disponibles para los estudiantes</p>
+                <ul class="features">
+                    <li><i class="fas fa-check-circle"></i> Agregar materias y secciones</li>
+                    <li><i class="fas fa-check-circle"></i> Asistente rápido con IA</li>
+                    <li><i class="fas fa-check-circle"></i> Gestión centralizada</li>
+                </ul>
+                <button class="btn">
+                    Acceder <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Estudiante Card -->
+            <div class="role-card student" onclick="window.location.href='/estudiante'">
+                <div class="role-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2>Estudiante</h2>
+                <p>Selecciona tus materias del catálogo institucional y genera tu horario perfecto</p>
+                <ul class="features">
+                    <li><i class="fas fa-check-circle"></i> Ver materias disponibles</li>
+                    <li><i class="fas fa-check-circle"></i> Seleccionar secciones</li>
+                    <li><i class="fas fa-check-circle"></i> Generar horarios sin conflictos</li>
+                </ul>
+                <button class="btn">
+                    Acceder <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Proyección Card -->
+            <div class="role-card projection" onclick="window.location.href='/proyeccion'">
+                <div class="role-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2>Proyección</h2>
+                <p>Planifica tus materias futuras y visualiza posibles combinaciones de horarios</p>
+                <ul class="features">
+                    <li><i class="fas fa-check-circle"></i> Agregar materias personales</li>
+                    <li><i class="fas fa-check-circle"></i> Simular horarios</li>
+                    <li><i class="fas fa-check-circle"></i> Planificación académica</li>
+                </ul>
+                <button class="btn">
+                    Acceder <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

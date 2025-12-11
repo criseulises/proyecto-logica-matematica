@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generador de Horarios - Lógica Matemática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- FontAwesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="background-gradient"></div>
+
+    <main class="app-container">
+      <header class="app-header">
+        <h1>SmartPlannerX</h1>
+        <p class="subtitle">Generador de Horarios Inteligente</p>
+      </header>
+
+      <div class="grid-layout">
+        <!-- Left Column: Inputs & Chat -->
+        <div class="left-column">                <!-- Chat Helper Section -->
+                <section class="card chat-section glass">
+                    <h2><i class="fas fa-comment-dots"></i> Asistente Rápido</h2>
+                    <div class="chat-box" id="chat-box">
+                        <div class="chat-msg bot">
+                            Usa el formato: "Materia Sección Días Inicio-Fin"<br>
+                            Ej: <b>Fisica 101 Lunes 14-16</b>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Ej: Calculo 101 Lunes 8-10">
+                        <button id="chat-send"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </section>
+
+          <!-- Manual Input Section (Collapsible or below) -->
+          <section class="card input-section glass">
+            <h2><i class="fas fa-plus-circle"></i> Manual</h2>
+            <form id="add-form">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="materia"
+                  placeholder="Materia"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="seccion"
+                  placeholder="Sección"
+                  required
+                />
+              </div>
+              <div class="days-checkboxes">
+                <label><input type="checkbox" value="Lunes" /> L</label>
+                <label><input type="checkbox" value="Martes" /> M</label>
+                <label><input type="checkbox" value="Miercoles" /> X</label>
+                <label><input type="checkbox" value="Jueves" /> J</label>
+                <label><input type="checkbox" value="Viernes" /> V</label>
+                <label><input type="checkbox" value="Sabado" /> S</label>
+              </div>
+              <div class="row">
+                <input
+                  type="number"
+                  id="inicio"
+                  placeholder="Inicio"
+                  min="0"
+                  max="23"
+                  required
+                />
+                <input
+                  type="number"
+                  id="fin"
+                  placeholder="Fin"
+                  min="0"
+                  max="23"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                class="btn-primary"
+                style="margin-top: 10px"
+              >
+                Agregar
+              </button>
+            </form>
+          </section>
+
+          <!-- Materias List -->
+          <section class="card list-section glass">
+            <h3>Materias Agregadas</h3>
+            <ul id="lista-items"></ul>
+          </section>
+        </div>
+
+        <!-- Right Column: Results -->
+        <div class="right-column">
+          <section class="card results-section glass">
+            <div class="results-header">
+              <h2>Horarios Generados</h2>
+              <button id="generate-btn" class="btn-success">GENERAR</button>
+            </div>
+
+            <div class="stats-box">
+              <p>Teóricas: <span id="stats-teoricas">0</span></p>
+              <p>Válidas: <span id="stats-validas">0</span></p>
+            </div>
+
+            <div class="horarios-container" id="horarios-container">
+              <p class="placeholder-text">
+                Usa el formulario para agregar materias.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
